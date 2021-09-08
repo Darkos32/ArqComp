@@ -5,55 +5,55 @@
 ;---------------------------------------------------
 ORG 0
 INICIO:
-       LDA  TESTE
-       STA  PBAIXA
-       LDA  TESTE+1
-       STA  PALTA
-       LDA  #PBAIXA
-       PUSH
-       LDA  #PALTA
-       PUSH
-       JSR  ROTINA
-       LDA  #PALTA
-       PUSH
-       LDA  #PBAIXA
-       PUSH
+       LDA  TESTE ; carrega no acumulador o byte menos significativo da variavel de entrada
+       STA  PBAIXA; byte menos significativo da entrada salvo em PBAIXA 
+       LDA  TESTE+1;carrega no acumulador o byte mais significativo da variavel de entrada
+       STA  PALTA ;byte mais significativo da entrada salvo em PALTA
+       LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
+       PUSH; empilha o endereço
+       LDA  #PALTA;carrega o endereço de PALTA no acumulador
+       PUSH; empilha o endereço
+       JSR  ROTINA; chamada da rotina que lida com numeros negativos
+       LDA  #PALTA;carrega o endereço de PALTA no acumulador
+       PUSH; empilha o endereço
+       LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
+       PUSH; empilha o endereço
        JSR  CONVERTER
        HLT
 END    0
 ORG 100
-TESTE:  DW 0FF0DH
-PALTA:  DB 0
-PBAIXA: DB 0
-ENDRET: DS 2
+TESTE:  DW 0FF0DH; valor de entrada
+PALTA:  DB 0; byte mais significativo da entrada
+PBAIXA: DB 0; byte menos significativo da entrada
+ENDRET: DS 2; endereco de retorno
 UNI:    DB 0 ;Casa das Unidades
 DEZ:    DB 0 ;Casa das Dezenanas
 CEM:    DB 0 ;Casa das Centenas
 MIL:    DB 0 ;Casa dos Milhares
 DEZM:   DB 0 ;Casa das Centenas de Milhares
 ORG 200
-ROTINA:
-       STS ENDRET
-       POP
-       POP
-TEMP1: DW 0
-TEMP2: DW 0
-PTR_1: DS 2
-PTR_2: DS 2
-AUX:   DW 0
-J:     DB 0
-       POP
-       STA PTR_1
-       LDA @PTR_1
-       STA TEMP1
-       POP
-       STA PTR_2
-       LDA @PTR_2
-       STA TEMP2
-       LDA TEMP1
-       STA AUX
-LOOP:
-       LDA AUX
+ROTINA:; tratamento de numeros negativos
+       STS ENDRET; salva o endereco de retorno
+       POP ;descarta
+       POP ;descarta
+TEMP1: DW 0 ; parte alta do valor
+TEMP2: DW 0 ; parte baixa do valor
+PTR_1: DS 2 ; endereco da parte alta 
+PTR_2: DS 2 ; endereco da parte baixa
+AUX:   DW 0 ; variavel auxiliar
+J:     DB 0 ; iterador do LOOP
+       POP  ; desempilha
+       STA PTR_1 ; salva o endereco da parte alta
+       LDA @PTR_1 ; carrega o valor da parte alta no acumulador
+       STA TEMP1 ; salva o valor do acumulador em TEMP1
+       POP ;desempilha
+       STA PTR_2 ; salva o endereco da parte baixa
+       LDA @PTR_2 ; carrega o valor da parte baixa no acumulador
+       STA TEMP2 ; salva o valor do acumulador em TEMP2
+       LDA TEMP1 ; carrega o valor da parte alta no acumulador
+       STA AUX ; salva a parte alta em AUX
+LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na posicao menos significativa
+       LDA AUX 
        SHR
        STA AUX
        LDA J
@@ -62,190 +62,193 @@ LOOP:
        LDA #7
        SUB J
        JP  LOOP
-       LDA AUX
-       SUB #1
-       JNZ FIM_ROTINA
-COMPLEMENTO:
-       LDA TEMP1
-       NOT
-       STA TEMP1
-       LDA TEMP2
-       NOT
-       ADD #1
-       STA TEMP2
-       LDA TEMP1
+       LDA AUX ; carrega o  bit mais significativo da parte alta
+       SUB #1 ; compara o bit com 1
+       JNZ FIM_ROTINA ; se o bit nao for 1 termina, ja que o numero e positivo
+COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero 
+       LDA TEMP1 ; carrega o valor da parte alta no acumulador
+       NOT ; inverte os bits do acumulador
+       STA TEMP1 ; salva o novo valor
+       LDA TEMP2 ; carrega o valor da parte baixa no acumulador
+       NOT ; inverte os bits do acumulador
+       ADD #1 ;soma 1
+       STA TEMP2 ; salva o novo valor
+       LDA TEMP1 ; carrega o possivel carry da parte baixa
        ADC #0
        STA TEMP1
 FIM_ROTINA:
-       LDA TEMP1
+       LDA TEMP1 ; atualiza o valor da parte alta
        STA @PTR_1
-       LDA TEMP2
+       LDA TEMP2 ; atualiza o valor da parte baixa
        STA @PTR_2
-       LDS ENDRET
+       LDS ENDRET ; retorno da funcao
        RET
 CONVERTER:
-           STS ENDRET
-           POP
-           POP
-TEMP_ALTA: DB 0
-TEMP_BAIXA:DB 0
-I:         DB 0
-PTR_LOOP:  DW 0
+           STS ENDRET; salva o endereco de retorno
+           POP ;descarta
+           POP ;descarta
+TEMP_ALTA: DB 0 ; parte alta 
+TEMP_BAIXA:DB 0 ; parte baixa
+I:         DB 0 ; iterador
+PTR_LOOP:  DW 0 ; Ponteiro auxiliar para os valores do LOOP
 PTR_ALTA:  DS 2 ;Ponteiro para a parte alta do o valor a ser convertido
-PTR_BAIXA: DS 2
-           POP
-           STA PTR_BAIXA
+PTR_BAIXA: DS 2 ;Ponteiro para a parte baixa do o valor a ser convertido
+           POP  ;desempilha
+           STA PTR_BAIXA ; pega o valor da parte baixa
            LDA @PTR_BAIXA
            STA TEMP_BAIXA
-           POP
-           STA PTR_ALTA
+           POP ; desempilha
+           STA PTR_ALTA ; pega o valor da parte alta
            LDA @PTR_ALTA
            STA TEMP_ALTA
-INICIO_ALG:
-DESLOCAMENTO_DEZM:
+INICIO_ALG: ; algoritmo double-dabble
+DESLOCAMENTO_DEZM: ; shift left na casa das dezenas de milhar
            LDA DEZM
            SHL
            STA DEZM
-DESLOCAMENTO_MIL:
+DESLOCAMENTO_MIL: ; shift left na casa dos milhares
            LDA MIL
            SHL
            STA MIL
-           JNC DESLOCAMENTO_CEM
-           LDA DEZM
+           JNC DESLOCAMENTO_CEM ; sem carry vai para proxima fase
+           LDA DEZM ;lida com o carry do shift
            ADD #10H
            STA DEZM
-DESLOCAMENTO_CEM:
+DESLOCAMENTO_CEM:  ;shift left na casa das centenas
            LDA CEM
            SHL
            STA CEM
-           JNC DESLOCAMENTO_DEZ
-           LDA MIL
+           JNC DESLOCAMENTO_DEZ ; sem carry vai para proxima fase
+           LDA MIL ;lida com o carry do shift
            ADD #10H
            STA MIL
-DESLOCAMENTO_DEZ:
+DESLOCAMENTO_DEZ: ;shift left na casa das dezenas
            LDA DEZ
            SHL
            STA DEZ
-           JNC DESLOCAMENTO_UNI
-           LDA CEM
+           JNC DESLOCAMENTO_UNI ; sem carry vai para proxima fase
+           LDA CEM ;lida com o carry do shift
            ADD #10H
            STA CEM
-DESLOCAMENTO_UNI:
+DESLOCAMENTO_UNI: ;shift left na casa das unidades
            LDA UNI
            SHL
            STA UNI
-           JNC DESLOCAMENTO_ALTA
-           LDA DEZ
+           JNC DESLOCAMENTO_ALTA ; sem carry vai para proxima fase
+           LDA DEZ ;lida com o carry do shift
            ADD #10H
            STA DEZ
-DESLOCAMENTO_ALTA:
+DESLOCAMENTO_ALTA: ;shift left na parte alta
            LDA TEMP_ALTA
            SHL
            STA TEMP_ALTA
-           JNC DESLOCAMENTO_BAIXA
-           LDA UNI
+           JNC DESLOCAMENTO_BAIXA ; sem carry vai para proxima fase
+           LDA UNI ;lida com o carry do shift
            ADD #10H
            STA UNI
-DESLOCAMENTO_BAIXA:
+DESLOCAMENTO_BAIXA: ;shift left na parte baixa
            LDA TEMP_BAIXA
            SHL
            STA TEMP_BAIXA
-           JNC TESTES_MAIORQ_5
-           LDA TEMP_ALTA
+           JNC TESTES_MAIORQ_5 ; sem carry vai para proxima fase
+           LDA TEMP_ALTA ;lida com o carry do shift
            ADD #1
            STA TEMP_ALTA
-TESTES_MAIORQ_5:
+TESTES_MAIORQ_5: ; testa se os digitos sao maiores que 5
+                 ; para que fosse possivel o carry do shift de um digito para o outro
+                 ; so usamos os 4 primeiros bits das variaveis
+                 ; por isso todos os valores sao multiplicados por 16 
            JMP INICIO_TESTE_DEZM
-CASO_DEZM_NEG:
+CASO_DEZM_NEG: ; caso o digito das dezenas de milhar seja maior que 5 , soma 3
            LDA DEZM
-           ADD #48
+           ADD #48 
            STA DEZM
            JMP FIM_TESTE_DEZM
-INICIO_TESTE_DEZM:
-           LDA DEZM ; CARREGA 5 NO ACUMULADOR
+INICIO_TESTE_DEZM: ;testa se o digito das dezenas de milhar e maior que 5 
+           LDA DEZM 
            SUB #80
            JN  FIM_TESTE_DEZM
            JMP CASO_DEZM_NEG
 FIM_TESTE_DEZM:
            JMP INICIO_TESTE_MIL
-CASO_MIL_NEG:
+CASO_MIL_NEG: ; caso o digito dos milhares seja maior que 5 , soma 3
            LDA MIL
            ADD #48
            STA MIL
            JNC FIM_TESTE_MIL
-           LDA DEZM
+           LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADD #10H
            STA DEZM
            JMP FIM_TESTE_MIL
-INICIO_TESTE_MIL:
+INICIO_TESTE_MIL: ;testa se o digito dos milhares e maior que 5 
            LDA MIL
            SUB #80
            JN  FIM_TESTE_MIL
            JMP CASO_MIL_NEG
 FIM_TESTE_MIL:
            JMP INICIO_TESTE_CEM
-CASO_CEM_NEG:
+CASO_CEM_NEG: ; caso o digito das centenas seja maior que 5 , soma 3
            LDA CEM
            ADD #48
            STA CEM
-           JNC FIM_TESTE_CEM
-           LDA MIL
+           JNC FIM_TESTE_CEM 
+           LDA MIL ;lida com um possivel carry para casa dos milhares
            ADD #10H
            STA MIL
-           JNC FIM_TESTE_CEM
-           LDA DEZM
+           JNC FIM_TESTE_CEM 
+           LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADD #10H
            STA DEZM
            JMP FIM_TESTE_CEM
-INICIO_TESTE_CEM:
+INICIO_TESTE_CEM: ;testa se o digito das centenas e maior que 5
            LDA CEM
            SUB #80
            JN  FIM_TESTE_CEM
            JMP CASO_CEM_NEG
 FIM_TESTE_CEM:
            JMP INICIO_TESTE_DEZ
-CASO_DEZ_NEG:
+CASO_DEZ_NEG: ; caso o digito das dezenas seja maior que 5 , soma 3
            LDA DEZ
            ADD #48
            STA DEZ
            JNC FIM_TESTE_DEZ
-           LDA CEM
+           LDA CEM ;lida com um possivel carry para casa das centenas
            ADD #10H
            STA CEM
            JNC FIM_TESTE_DEZ
-           LDA MIL
+           LDA MIL ;lida com um possivel carry para casa dos milhares
            ADD #10H
            STA MIL
-           JNC FIM_TESTE_DEZ
-           LDA DEZM
+           JNC FIM_TESTE_DEZ 
+           LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADD #10H
            STA DEZM
            JMP FIM_TESTE_DEZ
-INICIO_TESTE_DEZ:
+INICIO_TESTE_DEZ: ;testa se o digito das dezenas e maior que 5
            LDA DEZ
            SUB #80
            JN  FIM_TESTE_DEZ
            JMP CASO_DEZ_NEG
 FIM_TESTE_DEZ:
            JMP INICIO_TESTE_UNI
-CASO_UNI_NEG:
+CASO_UNI_NEG: ; caso o digito das unidades seja maior que 5 , soma 3
            LDA UNI
            ADD #48
            STA UNI
            JNC FIM_TESTE_UNI
-           LDA DEZ
+           LDA DEZ ;lida com um possivel carry para casa das dezenas
            ADD #10H
            STA DEZ
            JNC FIM_TESTE_UNI
-           LDA CEM
+           LDA CEM ;lida com um possivel carry para casa das centenas
            ADD #10H
            STA CEM
            JNC FIM_TESTE_UNI
-           LDA MIL
+           LDA MIL ;lida com um possivel carry para casa dos milhares
            ADD #10H
            STA MIL
            JNC FIM_TESTE_UNI
-           LDA DEZM
+           LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADC #10H
            STA DEZM
            JMP FIM_TESTE_UNI
@@ -255,22 +258,22 @@ INICIO_TESTE_UNI:
            JN  FIM_TESTE_UNI
            JMP CASO_UNI_NEG
 FIM_TESTE_UNI:
-           LDA TEMP_ALTA
-           OR  TEMP_ALTA
+           LDA TEMP_ALTA ; verifica se tanto a parte alta quanto baixa foram zeradas 
+           OR  TEMP_BAIXA;
            JNZ INICIO_ALG
 IMPRESSAO:
-           OUT 3
-INICIO_LOOP:
+           OUT 3 ; limpa o banner
+INICIO_LOOP: ;transforma em ASCII e imprime os digitos no banner
            LDA #DEZM
            SUB I
            STA PTR_LOOP
            LDA @PTR_LOOP
+           SHR ; shift de 4 bits para direita em cada digito 
            SHR
            SHR
            SHR
-           SHR
-           ADD #30H
-           OUT 2
+           ADD #30H ; converte para representacao ASCII
+           OUT 2 ; imprime o digito no banner
            LDA I
            ADD #1
            STA I
@@ -278,5 +281,5 @@ INICIO_LOOP:
            SUB I
            JP  INICIO_LOOP
 RETORNO2:
-          LDS ENDRET
+          LDS ENDRET ; retorno da funcao
           RET

@@ -1,0 +1,77 @@
+;---------------------------------------------------
+; Programa:
+; Autor:
+; Data:
+;---------------------------------------------------
+ ORG 0
+ INICIO:
+        LDA PTR_V
+        PUSH
+        LDA #0
+        PUSH
+        LDA #20
+        JSR QUICKSORT
+        HLT
+ END    INICIO
+ ORG 100
+ VARIAVEIS:
+ VETOR:    DW 20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1
+ PTR_V:    DW VETOR
+ ENDRET:   DS 2
+ END_COUNT:DW 0
+ PTR_END:  DW ENDRET
+
+ ORG 300
+ QUICKSORT:
+              SUB #1
+              STA FIM
+              LDA PTR_END
+              ADD END_COUNT
+              STA PTR_END
+              LDA END_COUNT
+              ADD #2
+              STS @PTR_END
+              POP
+              POP
+ V_ALTA:      DB 0
+ V_BAIX:      DB 0
+ PALTA:       DB 0 ;PARTE ALTA DE UM ELEMENTO DO VETOR
+ PBAIXA:      DB 0
+ INI:         DB 0 ; INDEX DO PRIMEIRO ELEMENTO DO VETOR
+ FIM:         DB 0 ; INDEX DO ULTIMO ELEMENTO DO VETOR
+ PIVO_P:      DB 0
+ PIVO_ALT:    DB 0 ;PARTE ALTA DO ELEMENTO PIVO DO VETOR
+ PIVO_BAIX:   DB 0
+ AUX_ALTA:    DB 0 ;PARTE ALTA DA VARIAVEL AUXILIAR
+ AUX_BAIXA:   DB 0
+              POP
+              STA INI
+              POP
+              STA V_BAIXA
+              ADD #1
+              STA V_ALTA
+              LDA @V_BAIXA
+              STA PBAIXA
+              LDA @V_ALTA
+              STA PALTA
+              SUB #2
+              JZ  FIM_ROTINA
+              LDA @TEMP1
+              ADD #1
+              STA @TEMP1
+              LDA TEMP1
+              PUSH
+              JSR ROTINA
+ FIM_ROTINA:
+              LDA END_COUNT
+              SUB #2
+              STA END_COUNT
+              LDA PTR_END
+              SUB END_COUNT
+              STA PTR_END
+              LDS @PTR_END
+              RET
+
+
+
+
