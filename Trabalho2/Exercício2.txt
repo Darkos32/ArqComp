@@ -31,6 +31,7 @@ DEZ:    DB 0 ;Casa das Dezenanas
 CEM:    DB 0 ;Casa das Centenas
 MIL:    DB 0 ;Casa dos Milhares
 DEZM:   DB 0 ;Casa das Centenas de Milhares
+FLAGM:  DB 0 ;marca se o sinal - aparece ou não
 ORG 200
 ROTINA:; tratamento de numeros negativos
        STS ENDRET; salva o endereco de retorno
@@ -68,6 +69,8 @@ LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na
        SUB #1 ; compara o bit com 1
        JNZ FIM_ROTINA ; se o bit nao for 1 termina, ja que o numero e positivo
 COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero
+       LDA #1  ; marca a flag
+       STA FLAGM
        LDA TEMP1 ; carrega o valor da parte alta no acumulador
        NOT ; inverte os bits do acumulador
        STA TEMP1 ; salva o novo valor
@@ -265,6 +268,11 @@ FIM_TESTE_UNI:
            JNZ INICIO_ALG
 IMPRESSAO:
            OUT 3 ; limpa o banner
+           LDA #1   ;verifica a flag
+           SUB FLAGM
+           JNZ INICIO_LOOP
+           ADD #45 ; converte para ASCII
+           OUT 2 ; imprime o sinal
 INICIO_LOOP: ;transforma em ASCII e imprime os digitos no banner
            LDA #DEZM
            SUB I
@@ -291,6 +299,7 @@ CLEAR:
            STA DEZM
            STA PTR_LOOP
            STA I
+           STA FLAGM
 RETORNO2:
           LDS ENDRET ; retorno da funcao
           RET
