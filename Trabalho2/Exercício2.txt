@@ -6,7 +6,7 @@
 ORG 0
 INICIO:
        LDA  TESTE ; carrega no acumulador o byte menos significativo da variavel de entrada
-       STA  PBAIXA; byte menos significativo da entrada salvo em PBAIXA 
+       STA  PBAIXA; byte menos significativo da entrada salvo em PBAIXA
        LDA  TESTE+1;carrega no acumulador o byte mais significativo da variavel de entrada
        STA  PALTA ;byte mais significativo da entrada salvo em PALTA
        LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
@@ -38,7 +38,7 @@ ROTINA:; tratamento de numeros negativos
        POP ;descarta
 TEMP1: DW 0 ; parte alta do valor
 TEMP2: DW 0 ; parte baixa do valor
-PTR_1: DS 2 ; endereco da parte alta 
+PTR_1: DS 2 ; endereco da parte alta
 PTR_2: DS 2 ; endereco da parte baixa
 AUX:   DW 0 ; variavel auxiliar
 J:     DB 0 ; iterador do LOOP
@@ -53,7 +53,7 @@ J:     DB 0 ; iterador do LOOP
        LDA TEMP1 ; carrega o valor da parte alta no acumulador
        STA AUX ; salva a parte alta em AUX
 LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na posicao menos significativa
-       LDA AUX 
+       LDA AUX
        SHR
        STA AUX
        LDA J
@@ -62,10 +62,12 @@ LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na
        LDA #7
        SUB J
        JP  LOOP
+       LDA #0 ; zera J
+       STA J
        LDA AUX ; carrega o  bit mais significativo da parte alta
        SUB #1 ; compara o bit com 1
        JNZ FIM_ROTINA ; se o bit nao for 1 termina, ja que o numero e positivo
-COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero 
+COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero
        LDA TEMP1 ; carrega o valor da parte alta no acumulador
        NOT ; inverte os bits do acumulador
        STA TEMP1 ; salva o novo valor
@@ -87,7 +89,7 @@ CONVERTER:
            STS ENDRET; salva o endereco de retorno
            POP ;descarta
            POP ;descarta
-TEMP_ALTA: DB 0 ; parte alta 
+TEMP_ALTA: DB 0 ; parte alta
 TEMP_BAIXA:DB 0 ; parte baixa
 I:         DB 0 ; iterador
 PTR_LOOP:  DW 0 ; Ponteiro auxiliar para os valores do LOOP
@@ -157,15 +159,15 @@ DESLOCAMENTO_BAIXA: ;shift left na parte baixa
 TESTES_MAIORQ_5: ; testa se os digitos sao maiores que 5
                  ; para que fosse possivel o carry do shift de um digito para o outro
                  ; so usamos os 4 primeiros bits das variaveis
-                 ; por isso todos os valores sao multiplicados por 16 
+                 ; por isso todos os valores sao multiplicados por 16
            JMP INICIO_TESTE_DEZM
 CASO_DEZM_NEG: ; caso o digito das dezenas de milhar seja maior que 5 , soma 3
            LDA DEZM
-           ADD #48 
+           ADD #48
            STA DEZM
            JMP FIM_TESTE_DEZM
-INICIO_TESTE_DEZM: ;testa se o digito das dezenas de milhar e maior que 5 
-           LDA DEZM 
+INICIO_TESTE_DEZM: ;testa se o digito das dezenas de milhar e maior que 5
+           LDA DEZM
            SUB #80
            JN  FIM_TESTE_DEZM
            JMP CASO_DEZM_NEG
@@ -180,7 +182,7 @@ CASO_MIL_NEG: ; caso o digito dos milhares seja maior que 5 , soma 3
            ADD #10H
            STA DEZM
            JMP FIM_TESTE_MIL
-INICIO_TESTE_MIL: ;testa se o digito dos milhares e maior que 5 
+INICIO_TESTE_MIL: ;testa se o digito dos milhares e maior que 5
            LDA MIL
            SUB #80
            JN  FIM_TESTE_MIL
@@ -191,11 +193,11 @@ CASO_CEM_NEG: ; caso o digito das centenas seja maior que 5 , soma 3
            LDA CEM
            ADD #48
            STA CEM
-           JNC FIM_TESTE_CEM 
+           JNC FIM_TESTE_CEM
            LDA MIL ;lida com um possivel carry para casa dos milhares
            ADD #10H
            STA MIL
-           JNC FIM_TESTE_CEM 
+           JNC FIM_TESTE_CEM
            LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADD #10H
            STA DEZM
@@ -219,7 +221,7 @@ CASO_DEZ_NEG: ; caso o digito das dezenas seja maior que 5 , soma 3
            LDA MIL ;lida com um possivel carry para casa dos milhares
            ADD #10H
            STA MIL
-           JNC FIM_TESTE_DEZ 
+           JNC FIM_TESTE_DEZ
            LDA DEZM ;lida com um possivel carry para casa das dezenas de milhares
            ADD #10H
            STA DEZM
@@ -258,7 +260,7 @@ INICIO_TESTE_UNI:
            JN  FIM_TESTE_UNI
            JMP CASO_UNI_NEG
 FIM_TESTE_UNI:
-           LDA TEMP_ALTA ; verifica se tanto a parte alta quanto baixa foram zeradas 
+           LDA TEMP_ALTA ; verifica se tanto a parte alta quanto baixa foram zeradas
            OR  TEMP_BAIXA;
            JNZ INICIO_ALG
 IMPRESSAO:
@@ -268,7 +270,7 @@ INICIO_LOOP: ;transforma em ASCII e imprime os digitos no banner
            SUB I
            STA PTR_LOOP
            LDA @PTR_LOOP
-           SHR ; shift de 4 bits para direita em cada digito 
+           SHR ; shift de 4 bits para direita em cada digito
            SHR
            SHR
            SHR
@@ -280,6 +282,15 @@ INICIO_LOOP: ;transforma em ASCII e imprime os digitos no banner
            LDA #5
            SUB I
            JP  INICIO_LOOP
+CLEAR:
+           LDA #0  ; Reseta as variaveis
+           STA UNI
+           STA DEZ
+           STA CEM
+           STA MIL
+           STA DEZM
+           STA PTR_LOOP
+           STA I
 RETORNO2:
           LDS ENDRET ; retorno da funcao
           RET
