@@ -1,0 +1,282 @@
+;---------------------------------------------------
+; Programa:
+; Autor:
+; Data:
+;---------------------------------------------------
+ORG 0
+INICIO:
+       LDA  TESTE
+       STA  PBAIXA
+       LDA  TESTE+1
+       STA  PALTA
+       LDA  #PBAIXA
+       PUSH
+       LDA  #PALTA
+       PUSH
+       JSR  ROTINA
+       LDA  #PALTA
+       PUSH
+       LDA  #PBAIXA
+       PUSH
+       JSR  CONVERTER
+       HLT
+END    0
+ORG 100
+TESTE:  DW 0FF0DH
+PALTA:  DB 0
+PBAIXA: DB 0
+ENDRET: DS 2
+UNI:    DB 0 ;Casa das Unidades
+DEZ:    DB 0 ;Casa das Dezenanas
+CEM:    DB 0 ;Casa das Centenas
+MIL:    DB 0 ;Casa dos Milhares
+DEZM:   DB 0 ;Casa das Centenas de Milhares
+ORG 200
+ROTINA:
+       STS ENDRET
+       POP
+       POP
+TEMP1: DW 0
+TEMP2: DW 0
+PTR_1: DS 2
+PTR_2: DS 2
+AUX:   DW 0
+J:     DB 0
+       POP
+       STA PTR_1
+       LDA @PTR_1
+       STA TEMP1
+       POP
+       STA PTR_2
+       LDA @PTR_2
+       STA TEMP2
+       LDA TEMP1
+       STA AUX
+LOOP:
+       LDA AUX
+       SHR
+       STA AUX
+       LDA J
+       ADD #1
+       STA J
+       LDA #7
+       SUB J
+       JP  LOOP
+       LDA AUX
+       SUB #1
+       JNZ FIM_ROTINA
+COMPLEMENTO:
+       LDA TEMP1
+       NOT
+       STA TEMP1
+       LDA TEMP2
+       NOT
+       ADD #1
+       STA TEMP2
+       LDA TEMP1
+       ADC #0
+       STA TEMP1
+FIM_ROTINA:
+       LDA TEMP1
+       STA @PTR_1
+       LDA TEMP2
+       STA @PTR_2
+       LDS ENDRET
+       RET
+CONVERTER:
+           STS ENDRET
+           POP
+           POP
+TEMP_ALTA: DB 0
+TEMP_BAIXA:DB 0
+I:         DB 0
+PTR_LOOP:  DW 0
+PTR_ALTA:  DS 2 ;Ponteiro para a parte alta do o valor a ser convertido
+PTR_BAIXA: DS 2
+           POP
+           STA PTR_BAIXA
+           LDA @PTR_BAIXA
+           STA TEMP_BAIXA
+           POP
+           STA PTR_ALTA
+           LDA @PTR_ALTA
+           STA TEMP_ALTA
+INICIO_ALG:
+DESLOCAMENTO_DEZM:
+           LDA DEZM
+           SHL
+           STA DEZM
+DESLOCAMENTO_MIL:
+           LDA MIL
+           SHL
+           STA MIL
+           JNC DESLOCAMENTO_CEM
+           LDA DEZM
+           ADD #10H
+           STA DEZM
+DESLOCAMENTO_CEM:
+           LDA CEM
+           SHL
+           STA CEM
+           JNC DESLOCAMENTO_DEZ
+           LDA MIL
+           ADD #10H
+           STA MIL
+DESLOCAMENTO_DEZ:
+           LDA DEZ
+           SHL
+           STA DEZ
+           JNC DESLOCAMENTO_UNI
+           LDA CEM
+           ADD #10H
+           STA CEM
+DESLOCAMENTO_UNI:
+           LDA UNI
+           SHL
+           STA UNI
+           JNC DESLOCAMENTO_ALTA
+           LDA DEZ
+           ADD #10H
+           STA DEZ
+DESLOCAMENTO_ALTA:
+           LDA TEMP_ALTA
+           SHL
+           STA TEMP_ALTA
+           JNC DESLOCAMENTO_BAIXA
+           LDA UNI
+           ADD #10H
+           STA UNI
+DESLOCAMENTO_BAIXA:
+           LDA TEMP_BAIXA
+           SHL
+           STA TEMP_BAIXA
+           JNC TESTES_MAIORQ_5
+           LDA TEMP_ALTA
+           ADD #1
+           STA TEMP_ALTA
+TESTES_MAIORQ_5:
+           JMP INICIO_TESTE_DEZM
+CASO_DEZM_NEG:
+           LDA DEZM
+           ADD #48
+           STA DEZM
+           JMP FIM_TESTE_DEZM
+INICIO_TESTE_DEZM:
+           LDA DEZM ; CARREGA 5 NO ACUMULADOR
+           SUB #80
+           JN  FIM_TESTE_DEZM
+           JMP CASO_DEZM_NEG
+FIM_TESTE_DEZM:
+           JMP INICIO_TESTE_MIL
+CASO_MIL_NEG:
+           LDA MIL
+           ADD #48
+           STA MIL
+           JNC FIM_TESTE_MIL
+           LDA DEZM
+           ADD #10H
+           STA DEZM
+           JMP FIM_TESTE_MIL
+INICIO_TESTE_MIL:
+           LDA MIL
+           SUB #80
+           JN  FIM_TESTE_MIL
+           JMP CASO_MIL_NEG
+FIM_TESTE_MIL:
+           JMP INICIO_TESTE_CEM
+CASO_CEM_NEG:
+           LDA CEM
+           ADD #48
+           STA CEM
+           JNC FIM_TESTE_CEM
+           LDA MIL
+           ADD #10H
+           STA MIL
+           JNC FIM_TESTE_CEM
+           LDA DEZM
+           ADD #10H
+           STA DEZM
+           JMP FIM_TESTE_CEM
+INICIO_TESTE_CEM:
+           LDA CEM
+           SUB #80
+           JN  FIM_TESTE_CEM
+           JMP CASO_CEM_NEG
+FIM_TESTE_CEM:
+           JMP INICIO_TESTE_DEZ
+CASO_DEZ_NEG:
+           LDA DEZ
+           ADD #48
+           STA DEZ
+           JNC FIM_TESTE_DEZ
+           LDA CEM
+           ADD #10H
+           STA CEM
+           JNC FIM_TESTE_DEZ
+           LDA MIL
+           ADD #10H
+           STA MIL
+           JNC FIM_TESTE_DEZ
+           LDA DEZM
+           ADD #10H
+           STA DEZM
+           JMP FIM_TESTE_DEZ
+INICIO_TESTE_DEZ:
+           LDA DEZ
+           SUB #80
+           JN  FIM_TESTE_DEZ
+           JMP CASO_DEZ_NEG
+FIM_TESTE_DEZ:
+           JMP INICIO_TESTE_UNI
+CASO_UNI_NEG:
+           LDA UNI
+           ADD #48
+           STA UNI
+           JNC FIM_TESTE_UNI
+           LDA DEZ
+           ADD #10H
+           STA DEZ
+           JNC FIM_TESTE_UNI
+           LDA CEM
+           ADD #10H
+           STA CEM
+           JNC FIM_TESTE_UNI
+           LDA MIL
+           ADD #10H
+           STA MIL
+           JNC FIM_TESTE_UNI
+           LDA DEZM
+           ADC #10H
+           STA DEZM
+           JMP FIM_TESTE_UNI
+INICIO_TESTE_UNI:
+           LDA UNI
+           SUB #80
+           JN  FIM_TESTE_UNI
+           JMP CASO_UNI_NEG
+FIM_TESTE_UNI:
+           LDA TEMP_ALTA
+           OR  TEMP_ALTA
+           JNZ INICIO_ALG
+IMPRESSAO:
+           OUT 3
+INICIO_LOOP:
+           LDA #DEZM
+           SUB I
+           STA PTR_LOOP
+           LDA @PTR_LOOP
+           SHR
+           SHR
+           SHR
+           SHR
+           ADD #30H
+           OUT 2
+           LDA I
+           ADD #1
+           STA I
+           LDA #5
+           SUB I
+           JP  INICIO_LOOP
+RETORNO2:
+          LDS ENDRET
+          RET
