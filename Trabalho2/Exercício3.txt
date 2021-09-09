@@ -13,59 +13,273 @@
         JSR QUICKSORT
         HLT
  END    INICIO
- ORG 100
+ ORG 30
  VARIAVEIS:
  VETOR:    DW 20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1
  PTR_V:    DW VETOR
- ENDRET:   DS 2
  END_COUNT:DW 0
  PTR_END:  DW ENDRET
+ ENDRET:   DS 2
+
+ ORG 170
+ TAM_COUNT: DB 0
+ PTR_TAM:  DW TAM
+ TAM:       DB 0
 
  ORG 300
  QUICKSORT:
-              SUB #1
               STA FIM
+              SUB #1
+              STA J
               LDA PTR_END
               ADD END_COUNT
               STA PTR_END
               LDA END_COUNT
               ADD #2
+              STA END_COUNT
               STS @PTR_END
               POP
               POP
- V_ALTA:      DB 0
- V_BAIX:      DB 0
- PALTA:       DB 0 ;PARTE ALTA DE UM ELEMENTO DO VETOR
- PBAIXA:      DB 0
+ V_ALTA:      DW 0
+ V_BAIX:      DW 0
+ PALTA:       DW 0 ;PARTE ALTA DE UM ELEMENTO DO VETOR
+ PBAIXA:      DW 0
  INI:         DB 0 ; INDEX DO PRIMEIRO ELEMENTO DO VETOR
  FIM:         DB 0 ; INDEX DO ULTIMO ELEMENTO DO VETOR
- PIVO_P:      DB 0
- PIVO_ALT:    DB 0 ;PARTE ALTA DO ELEMENTO PIVO DO VETOR
- PIVO_BAIX:   DB 0
- AUX_ALTA:    DB 0 ;PARTE ALTA DA VARIAVEL AUXILIAR
- AUX_BAIXA:   DB 0
+ I:           DB 1
+ J:           DB 1
+ PIVO_P:      DW 0
+ PIVO_ALT:    DW 0 ;PARTE ALTA DO ELEMENTO PIVO DO VETOR
+ PIVO_BAIX:   DW 0
+ AUX1:        DW 0 ;PARTE ALTA DA VARIAVEL AUXILIAR
+ AUX2:        DW 0
+ AUX3:        DW 0
+ FLAG1:       DB 0
+ FLAG2:       DB 0
               POP
               STA INI
+              STA I
               POP
-              STA V_BAIXA
+              STA V_BAIX
               ADD #1
               STA V_ALTA
-              LDA @V_BAIXA
+              ;Calculo do endereço do pivo
+              LDA INI; divide INI por 2
+              SHR
+              STA AUX1; salva na auxiliar
+              LDA FIM ; divide FIM por 2
+              SHR
+              ADD AUX1 ; soma INI/2 e FIM/2
+              SHL
+              ADD V_BAIX;soma AUX ao endereço da parte baixa do primeiro elemento do vetor
+              STA PIVO_P;salva a posição da parte baixa do pivo
+              LDA @PIVO_P;carrega o valor da parte baixa do pivo
+              STA PIVO_BAIX;salva a parte baixa do pivo
+              LDA PIVO_P
+              ADD #1   ;endereço da parte alta
+              STA PIVO_P
+              LDA @PIVO_P
+              STA PIVO_ALT ; salva a parte alta do pivo
+ LOOP_EXTERIOR:
+              LDA J
+              SUB I
+              JN  CHAMADA_RECURSIVA
+ LOOP_I:
+              ;Pega a parte baixa do elemento do vetor da iteração
+              LDA I
+              SHL
+              ADD V_BAIX
+              STA AUX1
+              LDA @AUX1
               STA PBAIXA
-              LDA @V_ALTA
-              STA PALTA
-              SUB #2
-              JZ  FIM_ROTINA
-              LDA @TEMP1
+              ;Pega a parte alta do elemento do vetor da iteração
+              LDA AUX1
               ADD #1
-              STA @TEMP1
-              LDA TEMP1
+              STA AUX1
+              LDA @AUX1
+              STA PALTA
+              ;Complemento a 2
+              NOT
+              STA PALTA
+              LDA PBAIXA
+              NOT
+              ADD #1
+              STA PBAIXA
+              LDA PALTA
+              ADC #0
+              STA PALTA
+              ;Comparação entre elemento e pivo
+              LDA PIVO_BAIX
+              ADD PBAIXA
+              LDA PIVO_ALT
+              ADC PALTA
+              JP  TESTE_I_END
+              JMP LOOP_J
+TESTE_I_END:
+              ;Comparação entre fim e i
+              LDA FIM
+              SUB I
+              JP  INCREMENTA_I
+              JMP LOOP_J
+INCREMENTA_I:
+              LDA I
+              ADD #1
+              STA I
+              JMP LOOP_I
+LOOP_J:
+              ;Pega a parte baixa do elemento do vetor da iteração
+              LDA J
+              SHL
+              ADD V_BAIX
+              STA AUX1
+              LDA @AUX1
+              STA PBAIXA
+              ;Pega a parte alta do elemento do vetor da iteração
+              LDA AUX1
+              ADD #1
+              STA AUX1
+              LDA @AUX1
+              STA PALTA
+              ;Complemento a 2
+              LDA PIVO_BAIX
+              NOT
+              ADD #1
+              STA AUX2
+              LDA PIVO_ALT
+              NOT
+              ADC #0
+              STA AUX1
+              LDA PBAIXA
+              ADD AUX2
+              LDA PALTA
+              ADC AUX1
+              JP  TESTE_J_INI
+              JMP FIM_LOOP_J
+TESTE_J_INI:
+              LDA J
+              SUB INI
+              JP  DECREMENTA_J
+              JMP FIM_LOOP_J
+DECREMENTA_J:
+              LDA J
+              SUB #1
+              STA J
+              JMP LOOP_J
+FIM_LOOP_J:
+              LDA J
+              SUB I
+              JN FIM_IF
+              LDA I
+              SHL
+              ADD V_BAIX
+              STA AUX2  ; endereço da parte baixa de v[i]
+              ADD #1
+              STA AUX1  ;endereço da parte alta de v[i]
+              LDA J
+              SHL
+              ADD V_BAIX
+              STA PBAIXA ;endereço da parte baixa de v[J]
+              ADD #1
+              STA PALTA ;;endereço da parte alta de v[J]
+              ;Troca a parte baixa de v[i] com a de v[j]
+              LDA @AUX2
+              STA AUX3
+              LDA @PBAIXA
+              STA @AUX2
+              LDA AUX3
+              STA @PBAIXA
+              ;Troca a parte alta de v[i] com a de v[j]
+              LDA @AUX1
+              STA AUX3
+              LDA @PALTA
+              STA @AUX1
+              LDA AUX3
+              STA @PALTA
+              ;Incrementa i
+              LDA I
+              ADD #1
+              STA I
+              LDA J
+              SUB #1
+              STA J
+              LDA #0
+              STA AUX1
+              STA AUX2
+              STA AUX3
+FIM_IF:
+              JMP LOOP_EXTERIOR
+FLAG_J:
+              LDA FLAG1
+              ADD #1
+              JMP TESTE_CHAMADA_I
+FLAG_I:
+              LDA FLAG2
+              ADD #1
+              JMP CHAMADA_J
+CHAMADA_RECURSIVA:
+              LDA J
+              SUB INI
+              JP  FLAG_J
+TESTE_CHAMADA_I:
+              LDA FIM
+              SUB I
+              JP  FLAG_I
+TESTE_NUMERO_CHAMADAS:
+              LDA FLAG1
+              SUB FLAG2
+              JNZ CASO_UMA_CHAMADA
+              LDA #0
+              OR  FLAG1
+              JZ FIM_ROTINA
+              LDA #0
+              STA FLAG1
+              STA FLAG2
+CASO_DUAS_CHAMADAS:
+              LDA V_BAIX
               PUSH
-              JSR ROTINA
- FIM_ROTINA:
-              LDA END_COUNT
-              SUB #2
-              STA END_COUNT
+              LDA INI
+              PUSH
+              LDA J
+              ADD #1
+              STA AUX1
+              LDA PTR_TAM
+              ADD TAM_COUNT
+              STA PTR_TAM
+              LDA AUX1
+              STA @PTR_TAM
+              LDA TAM_COUNT
+              ADD #1
+              STA TAM_COUNT
+              LDA V_BAIX
+              PUSH
+              LDA I
+              PUSH
+              LDA FIM
+              JSR QUICKSORT
+              LDA PTR_TAM
+              SUB TAM_COUNT
+              STA PTR_TAM
+              LDA @PTR_TAM
+              JSR QUICKSORT
+              JMP FIM_ROTINA
+CASO_UMA_CHAMADA:
+              LDA V_BAIX
+              PUSH
+              LDA  FLAG1
+              SUB  FLAG2
+              JP   CHAMADA_J
+              LDA INI
+              PUSH
+              LDA J
+              ADD #1
+              JSR QUICKSORT
+              JMP FIM_ROTINA
+CHAMADA_J:
+              LDA I
+              PUSH
+              LDA FIM
+              JSR QUICKSORT
+FIM_ROTINA:
               LDA PTR_END
               SUB END_COUNT
               STA PTR_END
