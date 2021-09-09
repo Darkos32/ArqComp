@@ -211,10 +211,12 @@ FIM_IF:
 FLAG_J:
               LDA FLAG1
               ADD #1
+              STA FLAG1
               JMP TESTE_CHAMADA_I
 FLAG_I:
               LDA FLAG2
               ADD #1
+              STA FLAG2
               JMP CHAMADA_J
 CHAMADA_RECURSIVA:
               LDA J
