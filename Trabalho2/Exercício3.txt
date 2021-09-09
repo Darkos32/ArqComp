@@ -217,7 +217,7 @@ FLAG_I:
               LDA FLAG2
               ADD #1
               STA FLAG2
-              JMP CHAMADA_J
+              JMP TESTE_NUMERO_CHAMADAS
 CHAMADA_RECURSIVA:
               LDA J
               SUB INI
@@ -270,16 +270,17 @@ CASO_UMA_CHAMADA:
               LDA  FLAG1
               SUB  FLAG2
               JP   CHAMADA_J
-              LDA INI
-              PUSH
-              LDA J
-              ADD #1
-              JSR QUICKSORT
-              JMP FIM_ROTINA
-CHAMADA_J:
               LDA I
               PUSH
               LDA FIM
+              PUSH
+              JSR QUICKSORT
+              JMP FIM_ROTINA
+CHAMADA_J:
+              LDA INI
+              PUSH
+              LDA J
+              PUSH
               JSR QUICKSORT
 FIM_ROTINA:
               LDA PTR_END

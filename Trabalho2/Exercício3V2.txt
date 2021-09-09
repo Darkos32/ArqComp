@@ -1,0 +1,127 @@
+;---------------------------------------------------
+; Programa:
+; Autor:
+; Data:
+;---------------------------------------------------
+  ORG 10
+  VETOR:  DW 20,19,18,17,16,15,14,13,12,10,11,9,8,7,6,5,4,3,2,1
+  PTR_V:  DW VETOR
+  ENDRET: DW 0
+  PTR_END:DW ENDRET
+
+  ORG 500
+  INICIO:
+         LDA PTR_V
+         PUSH
+         LDA #20
+         JSR BUBBLESORT
+         HLT
+  END    INICIO
+
+  PREENCHER:
+            STS ENDRET
+            STA TEMP_TAM
+            POP
+            POP
+  TEMP_V:   DW 0
+  AUX_V:    DW 0
+  TEMP_TAM: DB 0
+  K:        DB 0
+            POP
+            STA TEMP_V
+  LOOP:
+            LDA TEMP_V
+            ADD K
+            STA AUX_V
+            LDA #7
+            TRAP 0
+            STA @AUX_V
+            LDA K
+            ADD #2
+            STA K
+            SUB TEMP_TAM
+            JN  LOOP
+            LDS ENDRET
+            RET
+  BUBBLESORT:
+             SUB #1
+             SHL
+             STA TAM
+             STS ENDRET
+             POP
+             POP
+             POP
+             STA V
+  V:         DW 0
+  TAM:       DB 0
+  AUX1:      DW 0
+  AUX2:      DB 0
+  PALTA_A:   DW 0
+  PBAIXA_A:  DW 0
+  PALTA_B:   DW 0
+  PBAIXA_B:  DW 0
+  I:         DB 0
+  J:         DB 0
+             LDA TAM
+             STA I
+
+  LOOP_I:
+             LDA 1
+             SUB I
+             JN  IN_LOOP_I
+             JMP FIM_LOOP_I
+  IN_LOOP_I:
+             LDA #0
+             STA J
+  LOOP_J:
+             LDA J
+             SUB I
+             JN  IN_LOOP_J
+             JMP FIM_LOOP_J
+  IN_LOOP_J:
+             ;Pega v[j]
+             LDA V
+             ADD J
+             STA PBAIXA_A
+             ADD #1
+             STA PALTA_A
+             ;Pega v[j+1]
+             ADD #1
+             STA PBAIXA_B
+             ADD #1
+             STA PALTA_B
+             ;Compara V[j] com V[j+1]
+             LDA @PBAIXA_A
+             SUB @PBAIXA_B
+             LDA @PALTA_A
+             SBC @PALTA_B
+             JN  INCREMENTA_J
+             ;Troca a parte baixa de V[j] e V[j+1]
+             LDA @PBAIXA_A
+             STA AUX1
+             LDA @PBAIXA_B
+             STA @PBAIXA_A
+             LDA AUX1
+             STA @PBAIXA_B
+             ;Troca a parte alta de V[j] e V[j+1]
+             LDA @PALTA_A
+             STA AUX1
+             LDA @PALTA_B
+             STA @PALTA_A
+             LDA AUX1
+             STA @PALTA_B
+  INCREMENTA_J:
+             ;Incrementa J
+             LDA J
+             ADD #2
+             STA J
+             JMP LOOP_J
+  FIM_LOOP_J:
+             LDA I
+             SUB #2
+             STA I
+             JMP LOOP_I
+  FIM_LOOP_I:
+             LDS ENDRET
+             RET
+

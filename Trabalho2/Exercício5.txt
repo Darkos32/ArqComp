@@ -1,93 +1,151 @@
 ;---------------------------------------------------
-; Programa:
-; Autor:
-; Data:
+; Programa: Torre de Hanói
+; Autor: Eduardo Kota Otomo
+; Data: 09.09.2021
 ;---------------------------------------------------
+ORG 700
+A: DS  1
+N: DB 0
+disco: DB 0
+
+pinoA: DB 65
+pinoB: DB 66
+pinoC: DB 67
+
+
+origem: DW pinoA
+destino: DW pinoB
+trabalho: DW pinoC
+
+
+t: DW origem
+
+
+
+
+ORG 800
+UNI:      DB 0
+DEZ:      DB 0
+CEM:      DB 0
+MIL:      DB 0
+DEZM:     DB 0
+FLAGM:    DB 0
+ENDRET:   DW 0
+PTR_END:  DW ENDRET
+
+
 ORG 0
-INICIO:
-       LDA  TESTE ; carrega no acumulador o byte menos significativo da variavel de entrada
-       STA  PBAIXA; byte menos significativo da entrada salvo em PBAIXA
-       LDA  TESTE+1;carrega no acumulador o byte mais significativo da variavel de entrada
-       STA  PALTA ;byte mais significativo da entrada salvo em PALTA
-       LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
-       PUSH; empilha o endereço
-       LDA  #PALTA;carrega o endereço de PALTA no acumulador
-       PUSH; empilha o endereço
-       JSR  ROTINA; chamada da rotina que lida com numeros negativos
-       LDA  #PALTA;carrega o endereço de PALTA no acumulador
-       PUSH; empilha o endereço
-       LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
-       PUSH; empilha o endereço
-       JSR  CONVERTER
-       HLT
-END    0
-ORG 100
-TESTE:  DW 0FF0DH; valor de entrada
-PALTA:  DB 0; byte mais significativo da entrada
-PBAIXA: DB 0; byte menos significativo da entrada
-ENDRET: DS 2; endereco de retorno
-UNI:    DB 0 ;Casa das Unidades
-DEZ:    DB 0 ;Casa das Dezenanas
-CEM:    DB 0 ;Casa das Centenas
-MIL:    DB 0 ;Casa dos Milhares
-DEZM:   DB 0 ;Casa das Centenas de Milhares
-FLAGM:  DB 0 ;marca se o sinal - aparece ou não
-ORG 200
-ROTINA:; tratamento de numeros negativos
-       STS ENDRET; salva o endereco de retorno
-       POP ;descarta
-       POP ;descarta
-TEMP1: DW 0 ; parte alta do valor
-TEMP2: DW 0 ; parte baixa do valor
-PTR_1: DS 2 ; endereco da parte alta
-PTR_2: DS 2 ; endereco da parte baixa
-AUX:   DW 0 ; variavel auxiliar
-J:     DB 0 ; iterador do LOOP
-       POP  ; desempilha
-       STA PTR_1 ; salva o endereco da parte alta
-       LDA @PTR_1 ; carrega o valor da parte alta no acumulador
-       STA TEMP1 ; salva o valor do acumulador em TEMP1
-       POP ;desempilha
-       STA PTR_2 ; salva o endereco da parte baixa
-       LDA @PTR_2 ; carrega o valor da parte baixa no acumulador
-       STA TEMP2 ; salva o valor do acumulador em TEMP2
-       LDA TEMP1 ; carrega o valor da parte alta no acumulador
-       STA AUX ; salva a parte alta em AUX
-LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na posicao menos significativa
-       LDA AUX
-       SHR
-       STA AUX
-       LDA J
-       ADD #1
-       STA J
-       LDA #7
-       SUB J
-       JP  LOOP
-       LDA #0 ; zera J
-       STA J
-       LDA AUX ; carrega o  bit mais significativo da parte alta
-       SUB #1 ; compara o bit com 1
-       JNZ FIM_ROTINA ; se o bit nao for 1 termina, ja que o numero e positivo
-COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero
-       LDA #1  ; marca a flag
-       STA FLAGM
-       LDA TEMP1 ; carrega o valor da parte alta no acumulador
-       NOT ; inverte os bits do acumulador
-       STA TEMP1 ; salva o novo valor
-       LDA TEMP2 ; carrega o valor da parte baixa no acumulador
-       NOT ; inverte os bits do acumulador
-       ADD #1 ;soma 1
-       STA TEMP2 ; salva o novo valor
-       LDA TEMP1 ; carrega o possivel carry da parte baixa
-       ADC #0
-       STA TEMP1
-FIM_ROTINA:
-       LDA TEMP1 ; atualiza o valor da parte alta
-       STA @PTR_1
-       LDA TEMP2 ; atualiza o valor da parte baixa
-       STA @PTR_2
-       LDS ENDRET ; retorno da funcao
-       RET
+main:
+passos:     DW 0
+  IN   1         ; Verifica se Entrou
+  ADD  #0
+  JZ   main     ; Loop se não Entrou
+  IN   0         ; Lê o Entrada
+  STA  N          ; Salva na mem�ria
+  OUT  0         ; Mostra o valor lida no visor
+  SUB  #1
+  STA  disco
+
+  JSR hanoi
+  OUT 3
+  LDA #passos
+  PUSH
+  JSR CONVERTER
+  JSR reseta
+  HLT
+  END main
+
+
+hanoi:
+
+  LDA disco
+  ADD #0
+
+  JNZ recursao
+  LDA passos
+  ADD #1
+  STA passos
+  OUT 0
+
+  OUT 3
+  LDA @origem
+  OUT 2
+  LDA #45
+  OUT 2
+  LDA #62
+  OUT 2
+  LDA @destino
+  OUT 2
+
+  RET
+
+
+recursao:
+  LDA disco
+  SUB #1
+  STA disco
+
+  LDA trabalho
+  STA t
+  LDA destino
+  STA trabalho
+  LDA t
+  STA destino
+
+  JSR hanoi
+
+  LDA trabalho
+  STA t
+  LDA destino
+  STA trabalho
+  LDA t
+  STA destino
+
+  LDA passos
+  ADD #1
+  STA passos
+  OUT 0
+
+  OUT 3
+  LDA @origem
+  OUT 2
+  LDA #45
+  OUT 2
+  LDA #62
+  OUT 2
+  LDA @destino
+  OUT 2
+
+  LDA origem
+  STA t
+  LDA trabalho
+  STA origem
+  LDA t
+  STA trabalho
+
+  JSR hanoi
+
+  LDA origem
+  STA t
+  LDA trabalho
+  STA origem
+  LDA t
+  STA trabalho
+
+  LDA disco
+  ADD #1
+  STA disco
+
+  RET
+
+reseta:
+  LDA pinoA
+  STA origem
+  LDA pinoB
+  STA trabalho
+  LDA pinoC
+  STA destino
+  RET
 CONVERTER:
            STS ENDRET; salva o endereco de retorno
            POP ;descarta
@@ -95,15 +153,15 @@ CONVERTER:
 TEMP_ALTA: DB 0 ; parte alta
 TEMP_BAIXA:DB 0 ; parte baixa
 I:         DB 0 ; iterador
-PTR_LOOP:  DW 0 ; Ponteiro auxiliar para os valores do LOOP
+PTR_LOOP:  DW DEZM ; Ponteiro auxiliar para os valores do LOOP
 PTR_ALTA:  DS 2 ;Ponteiro para a parte alta do o valor a ser convertido
 PTR_BAIXA: DS 2 ;Ponteiro para a parte baixa do o valor a ser convertido
            POP  ;desempilha
-           STA PTR_BAIXA ; pega o valor da parte baixa
+           STA PTR_BAIXA  ; pega o valor da parte baixa
+           ADD #1
+           STA PTR_ALTA
            LDA @PTR_BAIXA
            STA TEMP_BAIXA
-           POP ; desempilha
-           STA PTR_ALTA ; pega o valor da parte alta
            LDA @PTR_ALTA
            STA TEMP_ALTA
 INICIO_ALG: ; algoritmo double-dabble
@@ -155,7 +213,7 @@ DESLOCAMENTO_BAIXA: ;shift left na parte baixa
            LDA TEMP_BAIXA
            SHL
            STA TEMP_BAIXA
-           JNC VERIFICAR ; sem carry vai para proxima fase
+           JNC VERIFICAR; sem carry vai para proxima fase
            LDA TEMP_ALTA ;lida com o carry do shift
            ADD #1
            STA TEMP_ALTA
@@ -305,3 +363,5 @@ CLEAR:
 RETORNO2:
           LDS ENDRET ; retorno da funcao
           RET
+
+
