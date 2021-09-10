@@ -1,7 +1,7 @@
 ;---------------------------------------------------
-; Programa:
+; Programa: Ordenação de Vetor por Bubblesort
 ; Autor:
-; Data:
+; Data: 09/09/21
 ;---------------------------------------------------
   ORG 10
   VETOR:  DW 20,19,18,17,16,15,14,13,12,10,11,9,8,7,6,5,4,3,2,1
@@ -44,51 +44,61 @@
             LDS ENDRET
             RET
   BUBBLESORT:
+             ;Posição final do vetor
              SUB #1
+             ;Calcula o nº de bytes até a última posição
              SHL
-             STA TAM
-             STS ENDRET
+             STA I_BAIXA
+             LDA I_ALTA
+             ADC #0
+             STA I_ALTA
+             STS ENDRET; salva o endereço de retorno
+             POP ;descarta
+             POP ;descarta
              POP
-             POP
-             POP
-             STA V
-  V:         DW 0
-  TAM:       DB 0
-  AUX1:      DW 0
-  AUX2:      DB 0
-  PALTA_A:   DW 0
-  PBAIXA_A:  DW 0
-  PALTA_B:   DW 0
-  PBAIXA_B:  DW 0
-  I:         DB 0
-  J:         DB 0
-             LDA TAM
-             STA I
-
+             STA V ; SALVA O ENDEREÇO DO VETOR
+  V:         DW 0 ; endereço do vetor
+  AUX1:      DW 0 ; variável auxiliar da troca
+  PALTA_A:   DW 0 ; parte alta de v[j]
+  PBAIXA_A:  DW 0 ; parte baixa de v[j]
+  PALTA_B:   DW 0 ; parte alta de v[j+1]
+  PBAIXA_B:  DW 0 ; parte baixa de v[j+1]
+  I_BAIXA:   DB 0 ; parte baixa da maior posição que aquela iteração alcança
+  I_ALTA:    DB 0 ; parte alta da maior posição que aquela iteração alcança
+  J_BAIXA:   DB 0 ; parte baixa do iterador
+  J_ALTA:    DB 0 ; parte alta do iterador
   LOOP_I:
-             LDA 1
-             SUB I
-             JN  IN_LOOP_I
-             JMP FIM_LOOP_I
+             ;Verifica 1<i
+             LDA #1
+             SUB I_BAIXA
+             LDA #0
+             SBC I_ALTA
+             JN  IN_LOOP_I; I>1 entra no loop
+             JMP FIM_LOOP_I; i<1 sai do loop
   IN_LOOP_I:
              LDA #0
-             STA J
+             STA J_BAIXA
+             STA J_ALTA
   LOOP_J:
-             LDA J
-             SUB I
-             JN  IN_LOOP_J
-             JMP FIM_LOOP_J
+             ;Verifica se j>i
+             LDA J_BAIXA
+             SUB I_BAIXA
+             LDA J_ALTA
+             SBC I_ALTA
+             JN  IN_LOOP_J ; j<i entra no loop
+             JMP FIM_LOOP_J ; j>i sai do loop
   IN_LOOP_J:
              ;Pega v[j]
              LDA V
-             ADD J
+             ADD J_BAIXA
              STA PBAIXA_A
-             ADD #1
+             ADC #1
+             ADD J_ALTA
              STA PALTA_A
              ;Pega v[j+1]
              ADD #1
              STA PBAIXA_B
-             ADD #1
+             ADC #1
              STA PALTA_B
              ;Compara V[j] com V[j+1]
              LDA @PBAIXA_A
@@ -112,14 +122,20 @@
              STA @PALTA_B
   INCREMENTA_J:
              ;Incrementa J
-             LDA J
+             LDA J_BAIXA
              ADD #2
-             STA J
+             STA J_BAIXA
+             LDA J_ALTA
+             ADC #0
              JMP LOOP_J
   FIM_LOOP_J:
-             LDA I
+             ;Decrementa I
+             LDA I_BAIXA
              SUB #2
-             STA I
+             STA I_BAIXA
+             LDA I_ALTA
+             SBC #0
+             STA I_ALTA
              JMP LOOP_I
   FIM_LOOP_I:
              LDS ENDRET

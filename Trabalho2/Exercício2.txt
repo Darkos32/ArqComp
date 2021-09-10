@@ -1,7 +1,7 @@
 ;---------------------------------------------------
-; Programa:
-; Autor:
-; Data:
+; Programa:  Impressão de variável
+; Autor: Jorge Oliveira
+; Data:09/09
 ;---------------------------------------------------
 ORG 0
 INICIO:
@@ -14,9 +14,9 @@ INICIO:
        LDA  #PALTA;carrega o endereço de PALTA no acumulador
        PUSH; empilha o endereço
        JSR  ROTINA; chamada da rotina que lida com numeros negativos
-       LDA  #PALTA;carrega o endereço de PALTA no acumulador
+       LDA  PALTA;carrega  PALTA no acumulador
        PUSH; empilha o endereço
-       LDA  #PBAIXA; carrega o endereço de PBAIXA no acumulador
+       LDA  PBAIXA; carrega  de PBAIXA no acumulador
        PUSH; empilha o endereço
        JSR  CONVERTER
        HLT
@@ -42,7 +42,6 @@ TEMP2: DW 0 ; parte baixa do valor
 PTR_1: DS 2 ; endereco da parte alta
 PTR_2: DS 2 ; endereco da parte baixa
 AUX:   DW 0 ; variavel auxiliar
-J:     DB 0 ; iterador do LOOP
        POP  ; desempilha
        STA PTR_1 ; salva o endereco da parte alta
        LDA @PTR_1 ; carrega o valor da parte alta no acumulador
@@ -52,22 +51,8 @@ J:     DB 0 ; iterador do LOOP
        LDA @PTR_2 ; carrega o valor da parte baixa no acumulador
        STA TEMP2 ; salva o valor do acumulador em TEMP2
        LDA TEMP1 ; carrega o valor da parte alta no acumulador
-       STA AUX ; salva a parte alta em AUX
-LOOP: ; faz shift right na parte alta ate que o bit mais significativo estaja na posicao menos significativa
-       LDA AUX
-       SHR
-       STA AUX
-       LDA J
-       ADD #1
-       STA J
-       LDA #7
-       SUB J
-       JP  LOOP
-       LDA #0 ; zera J
-       STA J
-       LDA AUX ; carrega o  bit mais significativo da parte alta
-       SUB #1 ; compara o bit com 1
-       JNZ FIM_ROTINA ; se o bit nao for 1 termina, ja que o numero e positivo
+       JN  COMPLEMENTO ; se o valor for negativo, realiza complemento a 2
+       JMP FIM_ROTINA; senão termina a rotina
 COMPLEMENTO: ; realiza complemento a 2 para encontrar a representacao positiva do numero
        LDA #1  ; marca a flag
        STA FLAGM
@@ -96,16 +81,10 @@ TEMP_ALTA: DB 0 ; parte alta
 TEMP_BAIXA:DB 0 ; parte baixa
 I:         DB 0 ; iterador
 PTR_LOOP:  DW 0 ; Ponteiro auxiliar para os valores do LOOP
-PTR_ALTA:  DS 2 ;Ponteiro para a parte alta do o valor a ser convertido
-PTR_BAIXA: DS 2 ;Ponteiro para a parte baixa do o valor a ser convertido
            POP  ;desempilha
-           STA PTR_BAIXA ; pega o valor da parte baixa
-           LDA @PTR_BAIXA
-           STA TEMP_BAIXA
+           STA TEMP_BAIXA ; pega o valor da parte baixa
            POP ; desempilha
-           STA PTR_ALTA ; pega o valor da parte alta
-           LDA @PTR_ALTA
-           STA TEMP_ALTA
+           STA TEMP_ALTA ; pega o valor da parte baixa
 INICIO_ALG: ; algoritmo double-dabble
 DESLOCAMENTO_DEZM: ; shift left na casa das dezenas de milhar
            LDA DEZM
